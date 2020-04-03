@@ -9,30 +9,23 @@
 #  > docker run -p 9011:9011 -it fusionauth/fusionauth-app
 #
 
-FROM openjdk:14-jdk-alpine
+FROM fusionauth/fusionauth-java-alpine:dev
 
 LABEL description="Create an image running FusionAuth App. Installs FusionAuth App"
 LABEL maintainer="FusionAuth <dev@fusionauth.io>"
 
 EXPOSE 9011
 
-###### Install stuff we need and then cleanup cache #################
-RUN apk add --no-cache \
-  unzip \
-  curl \
-  && addgroup -g 1000 fusionauth \
-  && adduser -G fusionauth -u 1000 -D -H fusionauth
+###### Setup user/group #################
+RUN addgroup fusionauth \
+  && adduser -G fusionauth -D -H fusionauth
 
 ###### Copy the latest dev build ####################################
-COPY fusionauth-app.zip setenv.sh ./
-
-###### Install FusionAuth App Bundle ########################
-RUN mkdir -p /usr/local/fusionauth/fusionauth-app \
-  && unzip -nq fusionauth-app.zip -d /usr/local/fusionauth \
-  && rm fusionauth-app.zip \
-  && mv setenv.sh /usr/local/fusionauth/fusionauth-app/apache-tomcat/bin \
-  && chown -R fusionauth:fusionauth /usr/local/fusionauth
+COPY --chown=fusionauth:fusionauth fusionauth-app /usr/local/fusionauth
 
 ###### Start FusionAuth App #########################################
+
+# We set this so that we don't download java
+ENV FUSIONAUTH_USE_GLOBAL_JAVA=1
 USER fusionauth
 CMD ["/usr/local/fusionauth/fusionauth-app/apache-tomcat/bin/catalina.sh", "run"]

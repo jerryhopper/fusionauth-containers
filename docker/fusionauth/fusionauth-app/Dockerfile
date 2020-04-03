@@ -13,28 +13,30 @@
 #   > docker push fusionauth/fusionauth-app:latest
 #
 
-FROM openjdk:14-jdk-alpine
+FROM alpine:latest as build
+
+###### Install stuff we need and then cleanup cache #################
+RUN apk add --no-cache \
+  unzip \
+  curl \
+
+###### Get and install FusionAuth App Bundle ########################
+ENV FUSIONAUTH_VERSION=1.16.0
+RUN curl -Sk --progress-bar https://storage.googleapis.com/inversoft_products_j098230498/products/fusionauth/${FUSIONAUTH_VERSION}/fusionauth-app-${FUSIONAUTH_VERSION}.zip -o fusionauth-app.zip \
+  && mkdir -p /usr/local/fusionauth/fusionauth-app \
+  && unzip -nq fusionauth-app.zip -d /usr/local/fusionauth
+
+FROM fusionauth/fusionauth-java-alpine:dev
 
 LABEL description="Create an image running FusionAuth App. Installs FusionAuth App"
 LABEL maintainer="FusionAuth <dev@fusionauth.io>"
 
 EXPOSE 9011
 
-###### Install stuff we need and then cleanup cache #################
-RUN apk add --no-cache \
-  unzip \
-  curl \
-  && addgroup -g 1000 fusionauth \
-  && adduser -G fusionauth -u 1000 -D -H fusionauth
+RUN addgroup fusionauth \
+  && adduser -G fusionauth -D -H fusionauth
 
-###### Get and install FusionAuth App Bundle ########################
-ENV FUSIONAUTH_VERSION=1.16.0
-RUN curl -Sk --progress-bar https://storage.googleapis.com/inversoft_products_j098230498/products/fusionauth/${FUSIONAUTH_VERSION}/fusionauth-app-${FUSIONAUTH_VERSION}.zip -o fusionauth-app.zip \
-  && mkdir -p /usr/local/fusionauth/fusionauth-app \
-  && unzip -nq fusionauth-app.zip -d /usr/local/fusionauth \
-  && rm fusionauth-app.zip \
-  && mv setenv.sh /usr/local/fusionauth/fusionauth-app/apache-tomcat/bin \
-  && chown -R fusionauth:fusionauth /usr/local/fusionauth
+COPY --chmod fusionauth:fusionauth --from build /usr/local/fusionauth /usr/local/fusionauth
 
 ###### Start FusionAuth App #########################################
 USER fusionauth
