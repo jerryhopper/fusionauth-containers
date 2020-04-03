@@ -26,12 +26,7 @@ RUN curl -Sk --progress-bar https://storage.googleapis.com/inversoft_products_j0
   && mkdir -p /usr/local/fusionauth/fusionauth-app \
   && unzip -nq fusionauth-app.zip -d /usr/local/fusionauth
 
-FROM fusionauth/fusionauth-java-alpine:dev
-
-LABEL description="Create an image running FusionAuth App. Installs FusionAuth App"
-LABEL maintainer="FusionAuth <dev@fusionauth.io>"
-
-EXPOSE 9011
+FROM fusionauth/fusionauth-java:14-jdk-alpine3.11
 
 RUN addgroup fusionauth \
   && adduser -G fusionauth -D -H fusionauth
@@ -39,5 +34,8 @@ RUN addgroup fusionauth \
 COPY --chmod fusionauth:fusionauth --from build /usr/local/fusionauth /usr/local/fusionauth
 
 ###### Start FusionAuth App #########################################
+LABEL description="Create an image running FusionAuth App. Installs FusionAuth App"
+LABEL maintainer="FusionAuth <dev@fusionauth.io>"
+EXPOSE 9011
 USER fusionauth
 CMD ["/usr/local/fusionauth/fusionauth-app/apache-tomcat/bin/catalina.sh", "run"]
