@@ -18,7 +18,7 @@ FROM alpine:latest as build
 ###### Install stuff we need and then cleanup cache #################
 RUN apk add --no-cache \
   unzip \
-  curl \
+  curl
 
 ###### Get and install FusionAuth App Bundle ########################
 ENV FUSIONAUTH_VERSION=1.16.0
@@ -31,7 +31,7 @@ FROM fusionauth/fusionauth-java:14-jdk-alpine3.11
 RUN addgroup fusionauth \
   && adduser -G fusionauth -D -H fusionauth
 
-COPY --chmod fusionauth:fusionauth --from build /usr/local/fusionauth /usr/local/fusionauth
+COPY --chown=fusionauth:fusionauth --from=build /usr/local/fusionauth /usr/local/fusionauth
 
 ###### Start FusionAuth App #########################################
 LABEL description="Create an image running FusionAuth App. Installs FusionAuth App"
